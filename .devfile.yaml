@@ -1,0 +1,27 @@
+schemaVersion: 2.2.0
+metadata:
+  name: gemma4-banking77-lab
+  displayName: Gemma 4 BANKING77 fine tuning lab
+  description: Edit and submit a TRL plus PEFT GPU experiment from Dev Spaces.
+components:
+  - name: tools
+    container:
+      image: quay.io/devfile/universal-developer-image:ubi9-latest
+      memoryRequest: 512Mi
+      memoryLimit: 4Gi
+      cpuRequest: 250m
+      cpuLimit: "2"
+      mountSources: true
+commands:
+  - id: check-tools
+    exec:
+      component: tools
+      commandLine: 'oc version --client && python3 --version && git --version'
+      group:
+        kind: test
+  - id: build-and-run
+    exec:
+      component: tools
+      commandLine: 'bash scripts/build-and-run.sh'
+      group:
+        kind: run

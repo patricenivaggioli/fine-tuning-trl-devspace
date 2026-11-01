@@ -1,0 +1,14 @@
+# Torch 2.9.0 is supplied by the pinned CUDA PyTorch base image.
+torch==2.9.0
+transformers==5.22.1
+trl==1.17.1
+peft==0.21.2
+datasets==5.1.0
+accelerate==1.15.0
+bitsandbytes==0.50.2
+# PyTorch's compatibility matrix pairs 0.14.1 with torch 2.9.0.
+torchao==0.14.1
+tensorboard==2.21.0
+sentencepiece==0.2.2
+Jinja2==3.1.6
+protobuf==7.36.2

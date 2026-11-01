@@ -1,0 +1,43 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: gemma4-banking77
+spec:
+  backoffLimit: 0
+  activeDeadlineSeconds: 21600
+  template:
+    spec:
+      restartPolicy: Never
+      nodeSelector:
+        nvidia.com/gpu.product: NVIDIA-H200-NVL
+      containers:
+        - name: lab
+          image: image-registry.openshift-image-registry.svc:5000/__NAMESPACE__/gemma4-banking77:latest
+          imagePullPolicy: Always
+          command:
+            - bash
+            - -lc
+            - |
+              set -euo pipefail
+              python -c 'import torch; print("GPU:", torch.cuda.get_device_name(0) if torch.cuda.is_available() else "none")'
+              python -m banking_lab.prepare --out /work/data --train-per-class 8 --val-per-class 3 --test-per-class 5
+              python -m banking_lab.evaluate --data-dir /work/data --output /work/base.jsonl
+              python -m banking_lab.train --data-dir /work/data --output-dir /work/train --adapter-dir /work/adapter --epochs 2
+              python -m banking_lab.evaluate --data-dir /work/data --adapter-dir /work/adapter --output /work/tuned.jsonl
+              python -m banking_lab.report --base /work/base.jsonl --tuned /work/tuned.jsonl --out /work/report
+          resources:
+            requests:
+              cpu: "4"
+              memory: 32Gi
+              nvidia.com/gpu: "1"
+            limits:
+              cpu: "8"
+              memory: 64Gi
+              nvidia.com/gpu: "1"
+          volumeMounts:
+            - name: artifacts
+              mountPath: /work
+      volumes:
+        - name: artifacts
+          persistentVolumeClaim:
+            claimName: gemma4-banking77-artifacts
