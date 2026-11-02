@@ -1,0 +1,2 @@
+# CPU-only dependency for dataset preparation in Dev Spaces.
+datasets==5.1.0

@@ -16,12 +16,12 @@ commands:
   - id: check-tools
     exec:
       component: tools
-      commandLine: 'oc version --client && python3 --version && git --version'
+      commandLine: 'oc version --client && python3.11 --version && git --version'
       group:
         kind: test
-  - id: build-and-run
+  - id: prepare-data
     exec:
       component: tools
-      commandLine: 'bash scripts/build-and-run.sh'
+      commandLine: 'bash scripts/setup-devspace.sh && HF_HUB_DISABLE_XET=1 .venv/bin/python -m banking_lab.prepare --out runs/data'
       group:
         kind: run

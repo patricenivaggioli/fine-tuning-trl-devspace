@@ -6,7 +6,7 @@
 
 Read [BANKING77's dataset card](https://huggingface.co/datasets/PolyAI/banking77). It has 13,083 English customer queries and 77 fine-grained intents: 10,003 official train and 3,080 official test rows. Compare `card_arrival`, `card_delivery_estimate`, and `card_not_working`: these near-neighbor labels make exact-match accuracy more informative than a trivial keyword task.
 
-Open [prepare.py](banking_lab/prepare.py). Record the seed, per-class counts, split source, and normalized duplicate rule. The generated `/work/data/metadata.json` includes a SHA-256 for each JSONL file. Validation is selected only from official training data; the official test set is never passed to the trainer.
+Open [prepare.py](banking_lab/prepare.py). Record the seed, per-class counts, split source, and normalized duplicate rule. Run the Dev Spaces preparation step in [README.md](README.md#run-on-ocpai-02); `runs/data/metadata.json` includes a SHA-256 for each JSONL file. The GPU Job writes the same output under `/work/data`. Validation is selected only from official training data; the official test set is never passed to the trainer.
 
 **Question:** Why is a random sample from all 13,083 records an invalid evaluation split?
 

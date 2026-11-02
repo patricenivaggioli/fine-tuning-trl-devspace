@@ -15,6 +15,15 @@ The default sample is **616 train / 231 validation / 385 test** examples (8 / 3 
 
 Open the [Gemma 4 lab workspace](https://devspaces.apps.ocpai-02.emea-geo-lab.com/pnivaggi-emea-se-dcloud-cisco-com/gemma4-banking77-lab/3100/) through the lab VPN, signing in through the [Dev Spaces dashboard](https://devspaces.apps.ocpai-02.emea-geo-lab.com/dashboard/) first. It clones the [hosted repository](https://github.com/patricenivaggioli/fine-tuning-trl-devspace) and uses the [devfile](.devfile.yaml) for a CPU development workspace; the H200 is requested by a separate OpenShift Job.
 
+To prepare and inspect the small dataset **inside Dev Spaces**, open a terminal at the repository root and run:
+
+```sh
+bash scripts/setup-devspace.sh
+HF_HUB_DISABLE_XET=1 .venv/bin/python -m banking_lab.prepare --out runs/data
+```
+
+The CPU environment installs only `datasets`; it does not install the GPU training stack. For F5 debugging, select **Prepare BANKING77 dataset** from Run and Debug after setup. The launch profile runs the module from the repository root using `.venv`. Running `banking_lab/prepare.py` directly as a file fails because its relative import has no package context. Generated data is kept under the Git-ignored `runs/` directory.
+
 The Dev Spaces tools container currently uses a restricted workspace service account. It cannot create Builds, PVCs, or Jobs, and it has no default `oc` project. Use a **VPN-connected terminal with your own OpenShift login** to submit the GPU work. The `lora-lab` project has been checked for this user's Build, Job, image stream, and PVC creation permissions. From a local clone:
 
 ```sh

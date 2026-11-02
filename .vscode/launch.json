@@ -1,0 +1,17 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Prepare BANKING77 dataset",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "banking_lab.prepare",
+      "cwd": "${workspaceFolder}",
+      "python": "${workspaceFolder}/.venv/bin/python",
+      "args": ["--out", "${workspaceFolder}/runs/data"],
+      "env": {"HF_HUB_DISABLE_XET": "1"},
+      "console": "integratedTerminal",
+      "justMyCode": true
+    }
+  ]
+}
