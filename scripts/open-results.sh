@@ -3,9 +3,12 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 command -v oc >/dev/null || { echo "oc CLI is required" >&2; exit 1; }
-namespace="$(oc project -q)"
+namespace="${1:-}"
+if [[ -z "$namespace" ]]; then
+  namespace="$(oc project -q 2>/dev/null || true)"
+fi
 if [[ ! "$namespace" =~ ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$ ]]; then
-  echo "Choose an OpenShift project before running this script." >&2
+  echo "Pass the GPU project name or select one with oc project." >&2
   exit 1
 fi
 if [[ "$(oc -n "$namespace" get job gemma4-banking77 -o jsonpath='{.status.succeeded}')" != "1" ]]; then

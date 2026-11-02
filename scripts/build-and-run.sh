@@ -3,11 +3,24 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 command -v oc >/dev/null || { echo "oc CLI is required" >&2; exit 1; }
-namespace="$(oc project -q)"
+namespace="${1:-}"
+if [[ -z "$namespace" ]]; then
+  namespace="$(oc project -q 2>/dev/null || true)"
+fi
 if [[ ! "$namespace" =~ ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$ ]]; then
-  echo "Choose an OpenShift project before running this script." >&2
+  echo "Pass a GPU project name or select one with oc project. A user-authenticated oc session is required." >&2
   exit 1
 fi
+for resource in buildconfigs.build.openshift.io builds.build.openshift.io imagestreams.image.openshift.io jobs.batch persistentvolumeclaims; do
+  if ! permission="$(oc auth can-i create "$resource" -n "$namespace")"; then
+    echo "Could not check permissions in $namespace. Check your OpenShift login and VPN connection." >&2
+    exit 1
+  fi
+  if [[ "$permission" != "yes" ]]; then
+    echo "Current oc identity cannot create $resource in $namespace. Use your OpenShift user login, not the Dev Spaces workspace service account." >&2
+    exit 1
+  fi
+done
 if oc -n "$namespace" get job gemma4-banking77 >/dev/null 2>&1; then
   echo "Job gemma4-banking77 already exists. Preserve its results or delete it deliberately before rerunning." >&2
   exit 1

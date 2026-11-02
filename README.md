@@ -13,16 +13,18 @@ The default sample is **616 train / 231 validation / 385 test** examples (8 / 3 
 
 ## Run on OCPAI-02
 
-Open [OpenShift Dev Spaces](https://devspaces.apps.ocpai-02.emea-geo-lab.com/) through the lab VPN and import a **hosted copy** of this repository. Its [devfile](.devfile.yaml) starts a CPU development workspace; the H200 is requested by a separate OpenShift Job. The attached local Git repository currently has no remote, so publish it to your chosen Git service before importing by URL.
+Open the [Gemma 4 lab workspace](https://devspaces.apps.ocpai-02.emea-geo-lab.com/pnivaggi-emea-se-dcloud-cisco-com/gemma4-banking77-lab/3100/) through the lab VPN, signing in through the [Dev Spaces dashboard](https://devspaces.apps.ocpai-02.emea-geo-lab.com/dashboard/) first. It clones the [hosted repository](https://github.com/patricenivaggioli/fine-tuning-trl-devspace) and uses the [devfile](.devfile.yaml) for a CPU development workspace; the H200 is requested by a separate OpenShift Job.
 
-In the Dev Spaces terminal, select a project with permission to build images, create an 80 GiB PVC, and request one full H200:
+The Dev Spaces tools container currently uses a restricted workspace service account. It cannot create Builds, PVCs, or Jobs, and it has no default `oc` project. Use a **VPN-connected terminal with your own OpenShift login** to submit the GPU work. The `lora-lab` project has been checked for this user's Build, Job, image stream, and PVC creation permissions. From a local clone:
 
 ```sh
+git clone https://github.com/patricenivaggioli/fine-tuning-trl-devspace.git
+cd fine-tuning-trl-devspace
+# Authenticate oc to OCPAI-02 using your own login; keep tokens out of this repository.
 oc whoami
-oc project YOUR_GPU_PROJECT
-bash scripts/build-and-run.sh
-oc logs -f job/gemma4-banking77
-oc get job gemma4-banking77
+bash scripts/build-and-run.sh lora-lab
+oc -n lora-lab logs -f job/gemma4-banking77
+oc -n lora-lab get job gemma4-banking77
 ```
 
 The script builds the image using the repository [Dockerfile](Dockerfile), sending only its Dockerfile, dependency list, and Python source as the build context. It then creates the artifact PVC and submits the [GPU Job](deploy/train-job.yaml). It refuses to replace an existing Job. Its five sequential stages are data preparation, base evaluation, QLoRA training, adapter evaluation, and paired report. First model download and container build require network access to Docker Hub, PyPI, and Hugging Face. The image disables Hugging Face's Xet transfer path because the pinned BANKING77 download returned a CDN 403 through this lab connection; ordinary HTTPS succeeded.
@@ -30,11 +32,11 @@ The script builds the image using the repository [Dockerfile](Dockerfile), sendi
 When the Job is `Complete`:
 
 ```sh
-bash scripts/open-results.sh
+bash scripts/open-results.sh lora-lab
 cat runs/report.md
 ```
 
-This starts a CPU results pod, copies the small reports into the Dev Spaces workspace, and serves TensorBoard from the persisted training logs. To view the curves from a laptop on the VPN, run `oc -n YOUR_GPU_PROJECT port-forward pod/gemma4-results 6006:6006` on that laptop, then open `http://localhost:6006`. Delete the reader pod when done: `oc -n YOUR_GPU_PROJECT delete pod gemma4-results`.
+This starts a CPU results pod, copies the small reports into the local clone, and serves TensorBoard from the persisted training logs. Run `oc -n lora-lab port-forward pod/gemma4-results 6006:6006` on the VPN-connected computer, then open `http://localhost:6006`. Delete the reader pod when done: `oc -n lora-lab delete pod gemma4-results`.
 
 Dev Spaces keeps source code on its configured **10 GiB `local-path` workspace PVC**. The much larger model cache, adapter, predictions, and logs use a separate **80 GiB Ceph RBD PVC**. The workspaces' node-local storage is unsuitable as the model cache for this experiment.
 
@@ -44,7 +46,7 @@ Dev Spaces keeps source code on its configured **10 GiB `local-path` workspace P
 - BANKING77 is [CC BY 4.0](https://huggingface.co/datasets/PolyAI/banking77); attribute PolyAI and the original dataset authors if you redistribute derived material. The Gemma 4 model card lists Apache 2.0.
 - The default 385-row balanced subset is for instruction and rapid comparison, **not** the official full-test benchmark. Do not choose hyperparameters by looking at held-out test results; use validation loss, then run the test comparison once.
 - This is intent classification, not banking advice, transaction authorization, or a production service. A small discriminative classifier may be a better production baseline. The lab demonstrates SFT mechanics rather than proving that fine tuning is necessary.
-- No Hugging Face or OpenShift token is needed in this repository. The public model/dataset download without a token; Dev Spaces uses your OpenShift login. Never commit kubeconfigs, tokens, or private customer messages. Generated `runs/` and environment files are ignored by Git.
+- No Hugging Face or OpenShift token is needed in this repository. The public model/dataset download without a token. Use your own OpenShift login only in an authenticated terminal; never commit kubeconfigs, tokens, or private customer messages. Generated `runs/` and environment files are ignored by Git.
 - The code and manifests are validated locally, but **GPU training and end-to-end Dev Spaces execution from this new repository have not yet been run**.
 
 ## Repository map
